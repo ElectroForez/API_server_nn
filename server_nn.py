@@ -20,7 +20,7 @@ def check_info(info_path):
     info_files = ['all_updated.txt', 'new_updated.txt', 'order.txt']
     for file in info_files:
         if not os.path.exists(info_path + file):
-            open(file, 'w')
+            open(info_path + file, 'w')
 
 class HellowWOrld(Resource):
     def __init__(self):
@@ -45,11 +45,12 @@ class HellowWOrld(Resource):
             if not self.is_proceccing:
                 future_filename = 'Updated_' + pictures_folder + '/' \
                                   + self.process_picture(picture, pictures_path, upd_pictures_path, *args_realsr)
-
+                self.add_information(pictures_folder + '/' + picture.filename, 'order.txt')
                 self.after_processing_thread = threading.Thread(target=self.after_processing,
-                                                                args=(self, future_filename,),
+                                                                args=(future_filename,),
                                                                 name='after_proccessing')
                 self.after_processing_thread.start()
+                self.is_proceccing = True
             else:
                 return {'status': 'Wait some times. Computer is busy now by other picture'}
 
@@ -58,7 +59,6 @@ class HellowWOrld(Resource):
             return {"status": "No picture in request"}
 
     def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
-        self.add_information(pictures_path + picture.filename)
         filenameWOE = picture.filename.split('.')[0]
         picture.save('{}/{}'.format(pictures_path, picture.filename))
 
@@ -67,28 +67,28 @@ class HellowWOrld(Resource):
                                                            upd_pictures_path + '/' + filenameWOE + '.png',
                                                            *args_realsr,),
                                   kwargs= {
-                                      'pathToRealsr': '/home/vladt/PycharmProjects/VideoNN/realsr-ncnn-vulkan/realsr-ncnn-vulkan'},
+                                      'realsr_path': '/home/vladt/PycharmProjects/video_nn/realsr-ncnn-vulkan/realsr-ncnn-vulkan'},
                                              name='processing')
 
         self.processing_thread.start()
         return filenameWOE + '.png'
 
     def after_processing(self, picture_filename):
-        while not self.processing_thread.is_alive():
-            self.add_information(picture_filename, 'all_updated.txt')
-            self.add_information(picture_filename, 'new_updated.txt')
-            self.delete_information('order.txt')
+        while self.processing_thread.is_alive():
+            pass
+        self.add_information(picture_filename, 'all_updated.txt')
+        self.add_information(picture_filename, 'new_updated.txt')
+        self.delete_information('order.txt')
 
     def add_information(self, picture_filename, infofile, first=True):
         check_info(self.information_path)
         file_path = self.information_path + infofile
+        picture_filename += '\n'
         with open(file_path, 'r+') as file:
             text = file.readlines()
             if first:
-                text = [picture_filename + '\n'] + text
+                text = [picture_filename] + text
             else:
-                if (text[-1] == '\n') or (not text):
-                    del text[-1]
                 text += [picture_filename]
             file.seek(0)
             for row in text:
