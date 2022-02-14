@@ -1,11 +1,12 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
 import werkzeug
-from Video_nn import VideoNN
 import os
 import time
 import threading
 
+from TextFilesInstruments import  TextFilesFunctional
+from Processing import Processing
 app = Flask(__name__)
 api = Api(app)
 
@@ -14,20 +15,12 @@ parser = reqparse.RequestParser()
 parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
 
 
-def check_info(info_path):
-    if not os.path.isdir(info_path):
-        os.mkdir(info_path)
-    info_files = ['all_updated.txt', 'new_updated.txt', 'order.txt']
-    for file in info_files:
-        if not os.path.exists(info_path + file):
-            open(info_path + file, 'w')
-
-class HellowWOrld(Resource):
+class Content(Resource, Processing):
     def __init__(self):
-        self.is_proceccing = False
+        self.is_processing = False
         self.information_path = 'information/'
         self.content_path = 'content/'
-        check_info(self.information_path)
+        self.check_info()
 
     def post(self, pictures_folder):
         pictures_path = self.content_path + pictures_folder
@@ -40,72 +33,30 @@ class HellowWOrld(Resource):
         args = parser.parse_args()
         picture = args['picture']
         args_realsr = ''.split()
-
+        cur_picture_path = pictures_folder + '/' + picture.filename
         if picture:
-            if not self.is_proceccing:
+            if self.is_path_in_infoFile(cur_picture_path, 'order.txt'):
+                return {'status': 'You already send this picture to order'}
+
+            if not self.is_processing:
+                self.add_information(cur_picture_path, 'order.txt')
                 future_filename = 'Updated_' + pictures_folder + '/' \
                                   + self.process_picture(picture, pictures_path, upd_pictures_path, *args_realsr)
-                self.add_information(pictures_folder + '/' + picture.filename, 'order.txt')
+
                 self.after_processing_thread = threading.Thread(target=self.after_processing,
                                                                 args=(future_filename,),
                                                                 name='after_proccessing')
                 self.after_processing_thread.start()
-                self.is_proceccing = True
+                self.is_processing = True
             else:
                 return {'status': 'Wait some times. Computer is busy now by other picture'}
-
             return {"status": "Picture was uploaded", 'futureName': future_filename}
         else:
             return {"status": "No picture in request"}
 
-    def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
-        filenameWOE = picture.filename.split('.')[0]
-        picture.save('{}/{}'.format(pictures_path, picture.filename))
-
-        self.processing_thread = threading.Thread(target=VideoNN.use_realsr,
-                                                  args=(VideoNN, pictures_path + '/' + picture.filename,
-                                                           upd_pictures_path + '/' + filenameWOE + '.png',
-                                                           *args_realsr,),
-                                  kwargs= {
-                                      'realsr_path': '/home/vladt/PycharmProjects/video_nn/realsr-ncnn-vulkan/realsr-ncnn-vulkan'},
-                                             name='processing')
-
-        self.processing_thread.start()
-        return filenameWOE + '.png'
-
-    def after_processing(self, picture_filename):
-        while self.processing_thread.is_alive():
-            pass
-        self.add_information(picture_filename, 'all_updated.txt')
-        self.add_information(picture_filename, 'new_updated.txt')
-        self.delete_information('order.txt')
-
-    def add_information(self, picture_filename, infofile, first=True):
-        check_info(self.information_path)
-        file_path = self.information_path + infofile
-        picture_filename += '\n'
-        with open(file_path, 'r+') as file:
-            text = file.readlines()
-            if first:
-                text = [picture_filename] + text
-            else:
-                text += [picture_filename]
-            file.seek(0)
-            for row in text:
-                file.write(row)
-
-    def delete_information(self, infofile):
-        check_info(self.information_path)
-        file_path = self.information_path + infofile
-        with open(file_path, 'r+') as file:
-            text = file.readlines()
-            text = text[1:]
-            file.seek(0)
-            for row in text:
-                file.write(row)
     # def delete(self, pictures_folder):
 
-api.add_resource(HellowWOrld, '/content/<string:pictures_folder>')
+api.add_resource(Content, '/content/<string:pictures_folder>')
 
 if __name__ == "__main__":
     app.run(debug=True)
