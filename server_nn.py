@@ -1,11 +1,11 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_restful import Api, Resource, reqparse
 import werkzeug
 import os
 import time
 import threading
 
-from TextFilesInstruments import  TextFilesFunctional
+from TextFilesInstruments import TextFilesFunctional
 from Processing import Processing
 app = Flask(__name__)
 api = Api(app)
@@ -54,9 +54,15 @@ class Content(Resource, Processing):
         else:
             return {"status": "No picture in request"}
 
+
+    def get(self, pictures_folder, picture):
+        path_to_file = self.content_path + pictures_folder + '/' + picture
+        if os.path.exists(path_to_file):
+            return send_file(path_to_file)
+        else:
+            return {'status': 'file is not exists'}
     # def delete(self, pictures_folder):
 
-api.add_resource(Content, '/content/<string:pictures_folder>')
-
+api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>')
 if __name__ == "__main__":
     app.run(debug=True)
