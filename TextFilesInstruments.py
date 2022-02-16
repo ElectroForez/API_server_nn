@@ -2,7 +2,7 @@ import os
 
 class TextFilesFunctional:
     def __init__(self):
-        self.information_path = None
+        self.information_path = 'information/'
 
     def check_info(self):
         if not os.path.isdir(self.information_path):
@@ -45,3 +45,18 @@ class TextFilesFunctional:
                 return True
             else:
                 return False
+
+    def read_infoFile(self, infoFile):
+        infoFile = self.information_path + infoFile
+        if not infoFile.endswith('.txt'):
+            infoFile += '.txt'
+        if not os.path.exists(infoFile):
+            return None
+        with open(infoFile, 'r') as file:
+            text = []
+            for line in file:
+                if line:
+                    text += [line.strip()]
+        return text
+
+

@@ -17,8 +17,8 @@ parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, locatio
 
 class Content(Resource, Processing):
     def __init__(self):
+        super().__init__()
         self.is_processing = False
-        self.information_path = 'information/'
         self.content_path = 'content/'
         self.check_info()
 
@@ -55,14 +55,27 @@ class Content(Resource, Processing):
             return {"status": "No picture in request"}
 
 
-    def get(self, pictures_folder, picture):
+    def get(self, pictures_folder, picture = None):
+        if not picture:
+            return {'status':pictures_folder}
         path_to_file = self.content_path + pictures_folder + '/' + picture
         if os.path.exists(path_to_file):
             return send_file(path_to_file)
         else:
             return {'status': 'file is not exists'}
+
+class Information(Resource, TextFilesFunctional):
+    def get(self, infoFile):
+        info = self.read_infoFile(infoFile)
+        if info is not None:
+            return {'File list': self.read_infoFile(infoFile)}
+        else:
+            return {'status': 'File not exists'}
+
     # def delete(self, pictures_folder):
 
 api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>')
+api.add_resource(Information, '/info/<string:infoFile>')
+
 if __name__ == "__main__":
     app.run(debug=True)
