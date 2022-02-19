@@ -3,6 +3,7 @@ import os
 class TextFilesFunctional:
     def __init__(self):
         self.information_path = 'information/'
+        self.check_info()
 
     def check_info(self):
         if not os.path.isdir(self.information_path):
@@ -36,6 +37,10 @@ class TextFilesFunctional:
             file.truncate(0)
             for row in text:
                 file.write(row)
+    def clear_file(self, infofile):
+        self.check_info()
+        file_path = self.information_path + infofile
+        open(file_path, 'w')
 
     def is_path_in_infoFile(self, path, infoFile):
         infoFile = self.information_path + infoFile
@@ -48,8 +53,6 @@ class TextFilesFunctional:
 
     def read_infoFile(self, infoFile):
         infoFile = self.information_path + infoFile
-        if not infoFile.endswith('.txt'):
-            infoFile += '.txt'
         if not os.path.exists(infoFile):
             return None
         with open(infoFile, 'r') as file:

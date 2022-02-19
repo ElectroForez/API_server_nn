@@ -3,6 +3,10 @@ from Video_nn import use_realsr
 import threading
 
 class Processing(TextFilesFunctional):
+    def __init__(self):
+        super().__init__()
+        self.is_processing = False
+
     def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
         filenameWOE = picture.filename.split('.')[0]
         picture.save('{}/{}'.format(pictures_path, picture.filename))
@@ -24,3 +28,4 @@ class Processing(TextFilesFunctional):
         self.add_information(picture_filename, 'all_updated.txt')
         self.add_information(picture_filename, 'new_updated.txt')
         self.delete_information('order.txt')
+        self.is_processing = False
