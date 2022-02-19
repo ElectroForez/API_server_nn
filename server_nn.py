@@ -8,6 +8,7 @@ from config import PASSWORD
 from TextFilesInstruments import TextFilesFunctional
 from Processing import Processing
 from functools import wraps
+from shutil import rmtree
 app = Flask(__name__)
 api = Api(app)
 
@@ -48,14 +49,21 @@ class Content(Resource, Processing):
         picture = args['picture']
         if not picture:
             return {"status": "No picture in request"}
+
+        if pictures_folder.startswith('Updated_'):
+            return {'status': 'You cannot post picture to folder with updated pictures'}
+
         if self.is_processing:
             return {'status': 'Wait some times. Computer is busy now by other picture'}
 
-        cur_picture_path = pictures_folder + '/' + picture.filename
-        pictures_path = self.content_path + pictures_folder
-        upd_pictures_path = self.content_path + 'Updated_' + pictures_folder
+        cur_picture_path = pictures_folder + '/' + picture.filename #Path to current picture
+        pictures_path = self.content_path + pictures_folder#Directory with pictures
+        upd_pictures_path = self.content_path + 'Updated_' + pictures_folder #Directory with updated pictures
         if self.is_path_in_infoFile(cur_picture_path, 'order.txt'):
             return {'status': 'You already send this picture to order'}
+
+        if os.path.exists(self.content_path + cur_picture_path):
+            return {'status': 'This picture already exists'}
 
         if not os.path.exists(pictures_path):
             os.mkdir(pictures_path)
@@ -63,7 +71,7 @@ class Content(Resource, Processing):
             os.mkdir(upd_pictures_path)
         
         args_realsr = ''
-        if 'realsr' in args:
+        if args['realsr']:
             args_realsr = args['realsr']
         args_realsr = args_realsr.split()
 
@@ -88,6 +96,24 @@ class Content(Resource, Processing):
             return send_file(path_to_file)
         else:
             return {'status': 'file is not exists'}
+
+    @password_required
+    def delete(self, pictures_folder, picture = None):
+        if picture:
+            path_to_file = self.content_path + pictures_folder + '/' + picture
+            if os.path.exists(path_to_file):
+                os.remove(path_to_file)
+                return {'status': 'The picture has been deleted'}
+            else:
+                return {'status': 'This picture does not exist'}
+        else:
+            path_to_folder = self.content_path + pictures_folder
+            if os.path.isdir(path_to_folder):
+                rmtree(path_to_folder)
+                return {'status': 'The folder has been deleted'}
+            else:
+                return {'status': 'This folder does not exist'}
+
 
 class Information(Resource, TextFilesFunctional):
     @password_required
