@@ -1,7 +1,7 @@
 from TextFilesInstruments import TextFilesFunctional
 from Video_nn import use_realsr
 import threading
-
+from config import REALSR_PATH
 
 class Processing(TextFilesFunctional):
     def __init__(self):
@@ -9,14 +9,12 @@ class Processing(TextFilesFunctional):
 
     def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
         filenameWOE = picture.filename.split('.')[0]
-        picture.save('{}/{}'.format(pictures_path, picture.filename))
-        realsr_path = '/home/vladt/PycharmProjects/video_nn/realsr-ncnn-vulkan/realsr-ncnn-vulkan'
         self.processing_thread = threading.Thread(target=use_realsr,
                                                   args=(pictures_path + '/' + picture.filename,
                                                         upd_pictures_path + '/' + filenameWOE + '.png',
                                                         *args_realsr,),
                                                   kwargs={
-                                                      'realsr_path': realsr_path},
+                                                      'realsr_path': REALSR_PATH},
                                                   name='processing')
 
         self.processing_thread.start()

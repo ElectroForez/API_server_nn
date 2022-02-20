@@ -1,9 +1,9 @@
 import os
-
+from config import INFORMATION_PATH
 
 class TextFilesFunctional:
     def __init__(self):
-        self.information_path = 'information/'
+        self.information_path = INFORMATION_PATH
         self.check_infoFiles()
 
     def check_infoFiles(self):
