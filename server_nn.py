@@ -3,7 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import werkzeug
 import os
 import threading
-from config import PASSWORD
+from config import PASSWORD, CONTENT_PATH
 from TextFilesInstruments import TextFilesFunctional
 from Processing import Processing
 from functools import wraps
@@ -26,9 +26,9 @@ def password_required(func):  # decorator for using methods only with auth
         if password_field in headers:
             password = headers[password_field]
         else:
-            return {'status': 'You need a password'}
+            return {'status': 'You need a password'}, 401
         if password != PASSWORD:
-            return {'status': 'You send a invalid password'}
+            return {'status': 'You send a invalid password'}, 401
         return func(*args, **kwargs)
 
     return wrapper
@@ -37,20 +37,22 @@ def password_required(func):  # decorator for using methods only with auth
 class Content(Resource, Processing):
     def __init__(self):
         super().__init__()
-        self.content_path = 'content/'
+        self.content_path = CONTENT_PATH
+        if not os.path.exists(self.content_path):
+            os.mkdir(self.content_path)
 
     @password_required
     def post(self, pictures_folder):
         args = parser.parse_args()
         picture = args['picture']
         if not picture:
-            return {"status": "No picture in request"}
+            return {"status": "No picture in request"}, 400
 
         if pictures_folder.startswith('Updated_'):
-            return {'status': 'You cannot post picture to folder with updated pictures'}
+            return {'status': 'You cannot post picture to folder with updated pictures'}, 403
 
         if self.read_infoFile('order.txt'):
-            return {'status': 'Wait some times. Computer is busy now by other picture'}
+            return {'status': 'Wait some times. Computer is busy now by other picture'}, 503
 
         cur_picture_path = pictures_folder + '/' + picture.filename  # Path to current picture
         pictures_path = self.content_path + pictures_folder  # Directory with pictures
@@ -69,6 +71,7 @@ class Content(Resource, Processing):
         args_realsr = args_realsr.split()
 
         self.add_information(cur_picture_path, 'order.txt')
+        picture.save('{}/{}'.format(pictures_path, picture.filename))
         # the future name is returned from the process_picture method
         future_filename = 'Updated_' + pictures_folder + '/' \
                           + self.process_picture(picture, pictures_path, upd_pictures_path, *args_realsr)  # called here
@@ -78,13 +81,13 @@ class Content(Resource, Processing):
                                                    name='after_processing')
         after_processing_thread.start()
 
-        return {"status": "Picture was uploaded", 'futureName': future_filename}
+        return {"status": "Picture was uploaded", 'futureName': future_filename}, 202
 
     @password_required
     def get(self, pictures_folder, picture=None):
         path = self.content_path + pictures_folder
         if not os.path.exists(path):
-            return {'status': 'This folder does not exist'}
+            return {'status': 'This folder does not exist'}, 404
 
         if picture:
             path += '/' + picture
@@ -97,15 +100,15 @@ class Content(Resource, Processing):
                 return send_file(path)
             else:
                 files = os.listdir(path)
-                return {'status': files}
+                return {'Files list': files}
         else:
-            return {'status': f'This {obj} does not exist'}
+            return {'status': f'This {obj} does not exist'}, 404
 
     @password_required
     def delete(self, pictures_folder, picture=None):
         path = self.content_path + pictures_folder
         if not os.path.exists(path):
-            return {'status': 'This folder does not exist'}
+            return {'status': 'This folder does not exist'}, 404
 
         if picture:
             path += '/' + picture
@@ -120,7 +123,7 @@ class Content(Resource, Processing):
                 rmtree(path)
             return {'status': f'The {obj} has been deleted'}
         else:
-            return {'status': f'This {obj} does not exist'}
+            return {'status': f'This {obj} does not exist'}, 404
 
 
 class Information(Resource, TextFilesFunctional):
@@ -132,9 +135,9 @@ class Information(Resource, TextFilesFunctional):
         if info is not None:
             if infoFile == 'new_updated.txt':
                 self.clear_infoFile(infoFile)
-            return {'File list': info}
+            return {'Files list': info}
         else:
-            return {'status': 'File not exists'}
+            return {'status': 'File not exists'}, 404
 
 
 api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>')
