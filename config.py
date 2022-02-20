@@ -1,5 +1,5 @@
 from os import environ
-PASSWORD = environ.get('PASSWORD_API_NN')
-REALSR_PATH = '/home/vladt/PycharmProjects/video_nn/realsr-ncnn-vulkan/realsr-ncnn-vulkan'
+PASSWORD = environ['PASSWORD_API_NN']
+REALSR_PATH = environ['REALSR_PATH']
 INFORMATION_PATH = 'information/'
 CONTENT_PATH = 'content/'
