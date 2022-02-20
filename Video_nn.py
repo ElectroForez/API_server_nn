@@ -7,20 +7,19 @@ from datetime import datetime
 from moviepy.editor import AudioFileClip
 
 
-
-def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):#Function to improve the video
-    filename = videofile.split('/')[-1]#take filename
-    if upd_videofile.split('/')[-1].count('.') == 0:#check path it's file or directory
+def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):  # Function to improve the video
+    filename = videofile.split('/')[-1]  # take filename
+    if upd_videofile.split('/')[-1].count('.') == 0:  # check path it's file or directory
         if not os.path.exists(upd_videofile):
             os.mkdir(upd_videofile)
         directory = upd_videofile
-        upd_videofile += '/untitled.avi'#it's path for a future file
+        upd_videofile += '/untitled.avi'  # it's path for a future file
     else:
         directory = videofile.split(filename)[0]
 
     fragments_path = filename.replace('.', '-') + '_fragments'
     upd_fragments_path = filename.replace('.', '-') + '_updated_fragments'
-    upd_videofile_WOA = 'UWOA_' + filename
+    upd_videofile_WOA = 'UWOA_' + filename  # UWOA - Updated without audio
 
     if directory:
         fragments_path = directory + '/' + fragments_path
@@ -50,12 +49,14 @@ def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):#Functi
 
     return 0
 
+
 def use_realsr(input_path, output_path, *args_realsr, realsr_path='./realsr-ncnn-vulkan/realsr-ncnn-vulkan'):
     t1 = datetime.now()
     finish = subprocess.run([realsr_path, '-i', input_path, '-o', output_path, *args_realsr])
     t2 = datetime.now()
     print('time cost realsr =', t2 - t1)
     return finish.returncode
+
 
 def video_to_fragments(path, output_path=None):
     # check paths
@@ -85,7 +86,7 @@ def video_to_fragments(path, output_path=None):
     frames = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
     print("fps=", int(fps), "frames=", int(frames))
 
-    count_frames = 0 #sometimes the wrong number of frames is displayed. Recalculation just in case
+    count_frames = 0  # sometimes the wrong number of frames is displayed. Recalculation just in case
     for i in range(int(frames)):
         ret, frame = videoCapture.read()
         if ret:
@@ -111,6 +112,7 @@ def video_to_fragments(path, output_path=None):
 
     return 0
 
+
 def glue_frames(src_path, videofile='untitled.avi', codec='h264', fps=30, *args_ffmpeg, photo_extenstion='png'):
     frames = glob.glob(src_path + '/*.' + photo_extenstion)
     if len(frames) == 0:
@@ -123,7 +125,7 @@ def glue_frames(src_path, videofile='untitled.avi', codec='h264', fps=30, *args_
         with open(src_path + '/info.txt', 'r') as infoFile:
             try:
                 fps = int(infoFile.readline())
-                filename = 'UpdWOA_' + infoFile.readline().strip()#Updated without audio
+                filename = 'UpdWOA_' + infoFile.readline().strip()  # Updated without audio
                 count_frames = int(infoFile.readline())
                 if count_frames != len(frames):
                     print('The number of files in info.txt does not match the actual')
@@ -137,14 +139,17 @@ def glue_frames(src_path, videofile='untitled.avi', codec='h264', fps=30, *args_
 
     t1 = datetime.now()
 
-    finish = subprocess.run(['ffmpeg', '-start_number', '1', '-r', str(fps), '-i', src_path + '/%d.png', '-vcodec', codec, '-y', *args_ffmpeg, videofile])
+    finish = subprocess.run(
+        ['ffmpeg', '-start_number', '1', '-r', str(fps), '-i', src_path + '/%d.png', '-vcodec', codec, '-y',
+         *args_ffmpeg, videofile])
 
     t2 = datetime.now()
     print('time cost qlue =', t2 - t1)
 
     return finish.returncode
 
-def add_audio( videofile, audio_path, new_name=None):
+
+def add_audio(videofile, audio_path, new_name=None):
     if not new_name:
         new_name = 'UPDATED_' + videofile.split('/')[-1]
     if videofile in (new_name, audio_path):
@@ -153,8 +158,9 @@ def add_audio( videofile, audio_path, new_name=None):
     t1 = datetime.now()
     finish = subprocess.run(['ffmpeg', '-i', audio_path, '-i', videofile, '-codec', 'copy', '-y', new_name])
     t2 = datetime.now()
-    print('time cost add audio = ', t2 -t1)
+    print('time cost add audio = ', t2 - t1)
     return finish.returncode
+
 
 if __name__ == '__main__':
     improve_video(*sys.argv[1:])
