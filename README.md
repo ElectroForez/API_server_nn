@@ -1,5 +1,5 @@
 # API_server_nn
-API server for neural networks
+API for image processing by neural networks
 <br>
 ## Usage
 export PASSWORD_API_NN={your_password}
