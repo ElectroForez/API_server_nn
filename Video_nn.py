@@ -8,6 +8,12 @@ from moviepy.editor import AudioFileClip
 
 
 def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):  # Function to improve the video
+    if not os.path.exists(videofile):
+        print(f'File {videofile} not found')
+        return -1
+    if os.path.isdir(videofile):
+        print(f'{videofile} it is a directory')
+        return -1
     filename = videofile.split('/')[-1]  # take filename
     if upd_videofile.split('/')[-1].count('.') == 0:  # check path it's file or directory
         if not os.path.exists(upd_videofile):
@@ -16,15 +22,17 @@ def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):  # Fun
         upd_videofile += '/untitled.avi'  # it's path for a future file
     else:
         directory = videofile.split(filename)[0]
-
+    if not directory.endswith('/'):
+        directory += '/'
     fragments_path = filename.replace('.', '-') + '_fragments'
     upd_fragments_path = filename.replace('.', '-') + '_updated_fragments'
     upd_videofile_WOA = 'UWOA_' + filename  # UWOA - Updated without audio
 
     if directory:
-        fragments_path = directory + '/' + fragments_path
-        upd_fragments_path = directory + '/' + upd_fragments_path
-        upd_videofile_WOA = directory + '/' + upd_videofile_WOA
+        fragments_path = directory + fragments_path
+        upd_fragments_path = directory  + upd_fragments_path
+        upd_videofile_WOA = directory + upd_videofile_WOA
+
     for path in [fragments_path, upd_fragments_path]:
         if not os.path.exists(path):
             os.mkdir(path)
@@ -43,7 +51,7 @@ def improve_video(videofile, upd_videofile='untitled.avi', *args_realsr):  # Fun
     if glue_frames(upd_fragments_path, upd_videofile_WOA) != 0:
         print('Error on glue frames')
         return -1
-    if add_audio(upd_videofile_WOA, fragments_path + '/audio.mp3', upd_videofile) != 0:
+    if add_audio(upd_videofile_WOA, fragments_path + '/audio.mp3', directory + upd_videofile) != 0:
         print('Error on adding audio')
         return -1
 

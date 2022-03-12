@@ -3,7 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import werkzeug
 import os
 import threading
-from config import PASSWORD, CONTENT_PATH
+from config_nn import PASSWORD, CONTENT_PATH
 from TextFilesInstruments import TextFilesFunctional
 from Processing import Processing
 from functools import wraps
@@ -13,8 +13,6 @@ app = Flask(__name__)
 api = Api(app)
 
 parser = reqparse.RequestParser()
-parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
-parser.add_argument('realsr', type='string', location='args')
 
 
 def password_required(func):  # decorator for using methods only with auth
@@ -30,7 +28,6 @@ def password_required(func):  # decorator for using methods only with auth
         if password != PASSWORD:
             return {'status': 'You send a invalid password'}, 401
         return func(*args, **kwargs)
-
     return wrapper
 
 
@@ -43,14 +40,15 @@ class Content(Resource, Processing):
 
     @password_required
     def post(self, pictures_folder):
+        parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
+        parser.add_argument('realsr', type=str)
         args = parser.parse_args()
         picture = args['picture']
+        print(args['realsr'])
         if not picture:
             return {"status": "No picture in request"}, 400
-
         if pictures_folder.startswith('Updated_'):
             return {'status': 'You cannot post picture to folder with updated pictures'}, 403
-
         if self.read_infoFile('order.txt'):
             return {'status': 'Wait some times. Computer is busy now by other picture'}, 503
 
@@ -65,9 +63,9 @@ class Content(Resource, Processing):
         if not os.path.exists(upd_pictures_path):
             os.mkdir(upd_pictures_path)
 
-        args_realsr = ''
-        if args['realsr']:
-            args_realsr = args['realsr']
+        args_realsr = request.args.get('realsr')
+        if not args_realsr:
+            args_realsr = ''
         args_realsr = args_realsr.split()
 
         self.add_information(cur_picture_path, 'order.txt')
@@ -75,7 +73,6 @@ class Content(Resource, Processing):
         # the future name is returned from the process_picture method
         future_filename = 'Updated_' + pictures_folder + '/' \
                           + self.process_picture(picture, pictures_path, upd_pictures_path, *args_realsr)  # called here
-
         after_processing_thread = threading.Thread(target=self.after_processing,
                                                    args=(future_filename,),
                                                    name='after_processing')
@@ -140,8 +137,20 @@ class Information(Resource, TextFilesFunctional):
             return {'status': 'File not exists'}, 404
 
 
+class Check(Resource, TextFilesFunctional):
+    @password_required
+    def get(self, condition):
+
+        if condition == 'available':
+            return {'status': 'Hello from API_NN'}
+        elif condition == 'busy':
+            return self.is_busy()
+        return {'status': 'Not found this condition'}, 404
+
+
 api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>')
 api.add_resource(Information, '/info/<string:infoFile>')
+api.add_resource(Check, '/check/<string:condition>')
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,5 +1,6 @@
 import os
-from config import INFORMATION_PATH
+from config_nn import INFORMATION_PATH
+
 
 class TextFilesFunctional:
     def __init__(self):
@@ -63,3 +64,9 @@ class TextFilesFunctional:
                 if line:
                     text += [line.strip()]
         return text
+
+    def is_busy(self):
+        if self.read_infoFile('order.txt'):
+            return True
+        else:
+            return False
