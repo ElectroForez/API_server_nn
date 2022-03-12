@@ -1,14 +1,15 @@
 from TextFilesInstruments import TextFilesFunctional
 from Video_nn import use_realsr
 import threading
-from config import REALSR_PATH
+from config_nn import REALSR_PATH
+
 
 class Processing(TextFilesFunctional):
     def __init__(self):
         super().__init__()
 
     def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
-        filenameWOE = picture.filename.split('.')[0]
+        filenameWOE = picture.filename.split('.')[0]  # filename without extension
         self.processing_thread = threading.Thread(target=use_realsr,
                                                   args=(pictures_path + '/' + picture.filename,
                                                         upd_pictures_path + '/' + filenameWOE + '.png',
