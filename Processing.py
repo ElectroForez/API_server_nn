@@ -1,3 +1,5 @@
+import time
+
 from TextFilesInstruments import TextFilesFunctional
 from Video_nn import use_realsr
 import threading
@@ -5,21 +7,19 @@ from config_nn import REALSR_PATH
 
 
 class Processing(TextFilesFunctional):
-    def __init__(self):
-        super().__init__()
-
-    def process_picture(self, picture, pictures_path, upd_pictures_path, *args_realsr):
-        filenameWOE = picture.filename.split('.')[0]  # filename without extension
+    def process_picture(self, pictures_path, upd_pictures_path, *args_realsr):
         self.processing_thread = threading.Thread(target=use_realsr,
-                                                  args=(pictures_path + '/' + picture.filename,
-                                                        upd_pictures_path + '/' + filenameWOE + '.png',
+                                                  args=(pictures_path,
+                                                        upd_pictures_path,
                                                         *args_realsr,),
                                                   kwargs={
                                                       'realsr_path': REALSR_PATH},
                                                   name='processing')
-
         self.processing_thread.start()
-        return filenameWOE + '.png'
+        time.sleep(0.3)
+        if not self.processing_thread.is_alive():  # if the thread dies quickly, then an error has occurred
+            return -1
+        return 0
 
     def after_processing(self, picture_filename):
         while self.processing_thread.is_alive():

@@ -28,6 +28,7 @@ def password_required(func):  # decorator for using methods only with auth
         if password != PASSWORD:
             return {'status': 'You send a invalid password'}, 401
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -41,44 +42,48 @@ class Content(Resource, Processing):
     @password_required
     def post(self, pictures_folder):
         parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
-        parser.add_argument('realsr', type=str)
+        parser.add_argument('realsr', type=str, location='args')
+        parser.add_argument('output_name', type=str, location='args')
         args = parser.parse_args()
         picture = args['picture']
-        print(args['realsr'])
         if not picture:
             return {"status": "No picture in request"}, 400
         if pictures_folder.startswith('Updated_'):
             return {'status': 'You cannot post picture to folder with updated pictures'}, 403
-        if self.read_infoFile('order.txt'):
+        if self.is_busy():
             return {'status': 'Wait some times. Computer is busy now by other picture'}, 503
-
-        cur_picture_path = pictures_folder + '/' + picture.filename  # Path to current picture
-        pictures_path = self.content_path + pictures_folder  # Directory with pictures
-        upd_pictures_path = self.content_path + 'Updated_' + pictures_folder  # Directory with updated pictures
+        pictures_path = self.content_path + pictures_folder  # Directory with not updated pictures
+        cur_picture_path = pictures_folder + '/' + picture.filename  # Not full path to  current picture
+        upd_pictures_path = 'Updated_' + pictures_folder  # Not full path to directory with updated pictures
         if self.is_path_in_infoFile(cur_picture_path, 'order.txt'):
             return {'status': 'You already send this picture to order'}
 
         if not os.path.exists(pictures_path):
             os.mkdir(pictures_path)
-        if not os.path.exists(upd_pictures_path):
-            os.mkdir(upd_pictures_path)
+        if not os.path.exists(self.content_path + upd_pictures_path):
+            os.mkdir(self.content_path + upd_pictures_path)
 
-        args_realsr = request.args.get('realsr')
+        args_realsr = args['realsr']
         if not args_realsr:
             args_realsr = ''
         args_realsr = args_realsr.split()
 
-        self.add_information(cur_picture_path, 'order.txt')
         picture.save('{}/{}'.format(pictures_path, picture.filename))
-        # the future name is returned from the process_picture method
-        future_filename = 'Updated_' + pictures_folder + '/' \
-                          + self.process_picture(picture, pictures_path, upd_pictures_path, *args_realsr)  # called here
+
+        output_filename = args['output_name']
+        if output_filename is None:
+            output_filename = picture.filename.split('.')[0] + '.png'
+        output_filename = upd_pictures_path + '/' + output_filename
+
+        if self.process_picture(self.content_path + cur_picture_path, self.content_path + output_filename,
+                             *args_realsr) == -1:
+            return {'status': 'Invalid args realsr or extension of files'}, 400
         after_processing_thread = threading.Thread(target=self.after_processing,
-                                                   args=(future_filename,),
+                                                   args=(output_filename,),
                                                    name='after_processing')
         after_processing_thread.start()
-
-        return {"status": "Picture was uploaded", 'futureName': future_filename}, 202
+        self.add_information(cur_picture_path, 'order.txt')
+        return {"status": "Picture was uploaded", 'output_filename': output_filename}, 202
 
     @password_required
     def get(self, pictures_folder, picture=None):
