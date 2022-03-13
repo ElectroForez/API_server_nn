@@ -2,7 +2,7 @@
 API for image processing by neural networks
 <br>
 ## Usage
-export PASSWORD_API_NN={your_password}
+export PASS_API_NN_SERV={your_password}
 <br>
 export REALSR_PATH={your_path_to_realsr}
 <br>
