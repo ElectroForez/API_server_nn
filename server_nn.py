@@ -43,7 +43,7 @@ class Content(Resource, Processing):
     def post(self, pictures_folder):
         parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
         parser.add_argument('realsr', type=str, location='args')
-        parser.add_argument('output_name', type=str, location='args')
+        parser.add_argument('output_filename', type=str, location='args')
         args = parser.parse_args()
         picture = args['picture']
         if not picture:
@@ -70,7 +70,7 @@ class Content(Resource, Processing):
 
         picture.save('{}/{}'.format(pictures_path, picture.filename))
 
-        output_filename = args['output_name']
+        output_filename = args['output_filename']
         if output_filename is None:
             output_filename = picture.filename.split('.')[0] + '.png'
         output_filename = upd_pictures_path + '/' + output_filename
@@ -144,18 +144,22 @@ class Information(Resource, TextFilesFunctional):
 
 class Check(Resource, TextFilesFunctional):
     @password_required
-    def get(self, condition):
-
+    def get(self, condition, pictures_folder, picture):
         if condition == 'available':
-            return {'status': 'Hello from API_NN'}
+            return {'status': True,
+                    'message': 'Hello from API_NN'}
         elif condition == 'busy':
-            return self.is_busy()
+            return {'status': self.is_busy()}
+        elif condition == 'content':
+            return {'File exists': os.path.exists(CONTENT_PATH + pictures_folder + '/' + picture)}
         return {'status': 'Not found this condition'}, 404
 
 
-api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>')
+api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>', )
 api.add_resource(Information, '/info/<string:infoFile>')
-api.add_resource(Check, '/check/<string:condition>')
+api.add_resource(Check, '/check/<string:condition>/',
+                 '/check/<string:condition>/<string:pictures_folder>/<string:picture>')
 
 if __name__ == "__main__":
+    TextFilesFunctional().delete_information('order.txt')
     app.run(debug=True)

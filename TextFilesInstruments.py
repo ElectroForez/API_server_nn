@@ -66,7 +66,7 @@ class TextFilesFunctional:
         return text
 
     def is_busy(self):
-        if self.read_infoFile('order.txt'):
+        if not self.read_infoFile('order.txt') in ([], ['']):
             return True
         else:
             return False
