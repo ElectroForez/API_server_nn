@@ -3,6 +3,8 @@ from config_nn import INFORMATION_PATH
 
 
 class TextFilesFunctional:
+    """class for work with text infofiles(files with information about processing)"""
+
     def __init__(self):
         self.information_path = INFORMATION_PATH
         self.check_infoFiles()

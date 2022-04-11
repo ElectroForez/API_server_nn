@@ -8,6 +8,7 @@ from TextFilesInstruments import TextFilesFunctional
 from Processing import Processing
 from functools import wraps
 from shutil import rmtree
+import sys
 
 app = Flask(__name__)
 api = Api(app)
@@ -33,6 +34,7 @@ def password_required(func):  # decorator for using methods only with auth
 
 
 class Content(Resource, Processing):
+    """class with methods to load pictures"""
     def __init__(self):
         super().__init__()
         self.content_path = CONTENT_PATH
@@ -129,29 +131,30 @@ class Content(Resource, Processing):
 
 
 class Information(Resource, TextFilesFunctional):
+    """method to get info about processing"""
     @password_required
     def get(self, infoFile):
         if not infoFile.endswith('.txt'):
             infoFile += '.txt'
         info = self.read_infoFile(infoFile)
         if info is not None:
-            if infoFile == 'new_updated.txt':
-                self.clear_infoFile(infoFile)
             return {'Files list': info}
         else:
             return {'status': 'File not exists'}, 404
 
 
 class Check(Resource, TextFilesFunctional):
+    """method to check some condition"""
     @password_required
-    def get(self, condition, pictures_folder, picture):
+    def get(self, condition, pictures_folder=None, picture=None):
         if condition == 'available':
             return {'status': True,
                     'message': 'Hello from API_NN'}
         elif condition == 'busy':
             return {'status': self.is_busy()}
         elif condition == 'content':
-            return {'File exists': os.path.exists(CONTENT_PATH + pictures_folder + '/' + picture)}
+            exists = os.path.exists(CONTENT_PATH + pictures_folder + '/' + picture)
+            return {'File exists': exists}
         return {'status': 'Not found this condition'}, 404
 
 
@@ -162,4 +165,5 @@ api.add_resource(Check, '/check/<string:condition>/',
 
 if __name__ == "__main__":
     TextFilesFunctional().delete_information('order.txt')
-    app.run(debug=True)
+    TextFilesFunctional().delete_information('new_updated.txt')
+    app.run(port=int(sys.argv[1]), debug=True)

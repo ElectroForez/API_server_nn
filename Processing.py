@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from TextFilesInstruments import TextFilesFunctional
@@ -7,6 +8,9 @@ from config_nn import REALSR_PATH
 
 
 class Processing(TextFilesFunctional):
+    """class for parallel process_picture. Class will be removed"""
+
+    """method to start parallel process_picture(s)"""
     def process_picture(self, pictures_path, upd_pictures_path, *args_realsr):
         self.processing_thread = threading.Thread(target=use_realsr,
                                                   args=(pictures_path,
@@ -21,6 +25,7 @@ class Processing(TextFilesFunctional):
             return -1
         return 0
 
+    """method to change information after processing"""
     def after_processing(self, picture_filename):
         while self.processing_thread.is_alive():
             pass
