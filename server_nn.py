@@ -4,8 +4,8 @@ import werkzeug
 import os
 import threading
 from config_nn import PASSWORD, CONTENT_PATH
-from TextFilesInstruments import TextFilesFunctional
-from Processing import Processing
+from infofile import InfofileHandler
+from processing import Processing
 from functools import wraps
 from shutil import rmtree
 import sys
@@ -130,7 +130,7 @@ class Content(Resource, Processing):
             return {'status': f'This {obj} does not exist'}, 404
 
 
-class Information(Resource, TextFilesFunctional):
+class Information(Resource, InfofileHandler):
     """method to get info about processing"""
     @password_required
     def get(self, infoFile):
@@ -143,7 +143,7 @@ class Information(Resource, TextFilesFunctional):
             return {'status': 'File not exists'}, 404
 
 
-class Check(Resource, TextFilesFunctional):
+class Check(Resource, InfofileHandler):
     """method to check some condition"""
     @password_required
     def get(self, condition, pictures_folder=None, picture=None):
@@ -164,6 +164,6 @@ api.add_resource(Check, '/check/<string:condition>/',
                  '/check/<string:condition>/<string:pictures_folder>/<string:picture>')
 
 if __name__ == "__main__":
-    TextFilesFunctional().delete_information('order.txt')
-    TextFilesFunctional().delete_information('new_updated.txt')
+    InfofileHandler().delete_information('order.txt')
+    InfofileHandler().delete_information('new_updated.txt')
     app.run(port=int(sys.argv[1]), debug=True)

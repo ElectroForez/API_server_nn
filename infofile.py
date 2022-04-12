@@ -2,7 +2,7 @@ import os
 from config_nn import INFORMATION_PATH
 
 
-class TextFilesFunctional:
+class InfofileHandler:
     """class for work with text infofiles(files with information about processing)"""
 
     def __init__(self):

@@ -1,13 +1,15 @@
 import datetime
 import time
-
-from TextFilesInstruments import TextFilesFunctional
-from Video_nn import use_realsr
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from infofile import InfofileHandler
+from video_nn.video_nn import use_realsr
 import threading
 from config_nn import REALSR_PATH
 
 
-class Processing(TextFilesFunctional):
+class Processing(InfofileHandler):
     """class for parallel process_picture. Class will be removed"""
 
     """method to start parallel process_picture(s)"""
