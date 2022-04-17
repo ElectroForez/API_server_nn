@@ -160,10 +160,10 @@ class Check(Resource, InfofileHandler):
 
 api.add_resource(Content, '/content/<string:pictures_folder>', '/content/<string:pictures_folder>/<string:picture>', )
 api.add_resource(Information, '/info/<string:infoFile>')
-api.add_resource(Check, '/check/<string:condition>/',
+api.add_resource(Check, '/check/<string:condition>',
                  '/check/<string:condition>/<string:pictures_folder>/<string:picture>')
 
 if __name__ == "__main__":
     InfofileHandler().delete_information('order.txt')
     InfofileHandler().delete_information('new_updated.txt')
-    app.run(port=int(sys.argv[1]), debug=True)
+    app.run(host="0.0.0.0", port=int(sys.argv[1]), debug=True)
