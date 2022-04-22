@@ -166,4 +166,4 @@ api.add_resource(Check, '/check/<string:condition>',
 if __name__ == "__main__":
     InfofileHandler().delete_information('order.txt')
     InfofileHandler().delete_information('new_updated.txt')
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=sys.argv[1], debug=True)
