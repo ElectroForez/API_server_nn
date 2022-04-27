@@ -18,8 +18,6 @@ class Processing(InfofileHandler):
                                                   args=(pictures_path,
                                                         upd_pictures_path,
                                                         *args_realsr,),
-                                                  kwargs={
-                                                      'realsr_path': REALSR_PATH},
                                                   name='processing')
         self.processing_thread.start()
         time.sleep(0.3)
