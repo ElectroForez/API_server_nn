@@ -9,6 +9,7 @@ from processing import Processing
 from functools import wraps
 from shutil import rmtree
 import sys
+import argparse
 
 app = Flask(__name__)
 api = Api(app)
@@ -164,6 +165,13 @@ api.add_resource(Check, '/check/<string:condition>',
                  '/check/<string:condition>/<string:pictures_folder>/<string:picture>')
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='server_nn',
+                                     description='REST API server. '
+                                                 'Gets a picture and processes it using a neural network')
+    parser.add_argument('-p', '--port', type=int, default=5000, help="The port on which the server will be opened")
+    args = parser.parse_args()
+
     InfofileHandler().delete_information('order.txt')
     InfofileHandler().delete_information('new_updated.txt')
-    app.run(host="0.0.0.0", port=int(sys.argv[1]), debug=True)
+
+    app.run(host="0.0.0.0", port=args.port, debug=False)
