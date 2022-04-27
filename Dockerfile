@@ -7,4 +7,4 @@ RUN apt install python3-pip -y
 RUN pip install -r server_nn-api/requirments.txt -r video_nn/requirments.txt
 WORKDIR /usr/src/server_nn-api
 EXPOSE 5000
-ENTRYPOINT ["python3", "server_nn.py", "5000"]
+ENTRYPOINT ["python3", "server_nn.py", "-p", "5000"]
