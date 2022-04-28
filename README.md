@@ -30,6 +30,7 @@ options:
 ```
 # example
 ```
+export PASS_NN=password
 export REALSR_PATH="/home/vladt/realsr-ncnn-vulkan/realsr-ncnn-vulkan"
 $ python3 server_nn.py -p 5000
 ```
