@@ -1,0 +1,11 @@
+version: '2'
+services:
+  server-nn:
+    build: .
+    hostname: server_nn
+    environment:
+      PASS_NN: pass
+    devices:
+      - "/dev/dri:/dev/dri"
+    ports:
+      - "5000:5000"
