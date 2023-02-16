@@ -31,8 +31,29 @@ options:
   -p PORT, --port PORT  The port on which the server will be opened (default=500)
 ```
 # example
+Run
 ```
 export PASS_NN=password
 export REALSR_PATH="/home/vladt/realsr-ncnn-vulkan/realsr-ncnn-vulkan"
 $ python3 server_nn.py -p 5000
 ```
+
+Requests to server
+```
+# check status
+curl -H 'X-PASSWORD: pass' http://localhost:5000/info/all_updated
+
+# set task
+curl -X POST 'http://localhost:5000/content/dir001?realsr=-x%20-s%204&output_name=out001.png' -H 'X-PASSWORD: pass' -F 'picture=@"/tmp/testdir/in001.png"'
+{"status": "Picture was uploaded", "output_filename": "Updated_dir001/in001.png"}
+
+# get list pictures
+curl -H 'X-PASSWORD: pass' http://localhost:5000/content/Updated_dir001
+
+# download result
+curl -H 'X-PASSWORD: pass' http://localhost:5000/content/Updated_dir001/in001.png -o /tmp/testdir/out001.png
+
+# cleanup result
+curl -X DELETE -H 'X-PASSWORD: pass' http://localhost:5000/content/Updated_dir001/in001.png
+```
+
